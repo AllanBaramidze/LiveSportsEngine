@@ -1,0 +1,2 @@
+# Live Sports Engine
+A real-time statistical arbitrage system that identifies and quantifies pricing inefficiencies between ESPN's proprietary win probability models and Polymarket's prediction market odds across major North American sports. The engine continuously monitors live game states, compares model-derived probabilities against market-implied probabilities, and surfaces actionable value betting opportunities when the two sources diverge beyond statistically significant thresholds.
