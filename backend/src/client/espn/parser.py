@@ -32,5 +32,7 @@ def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[Matc
     return games
 
 
-def parse_state(data: dict[str, Any]) -> list[MatchCreate]:
+def parse_state(data: dict[str, Any]) -> str:
     """Take ESPN state to check the update"""
+    # Pass in some JSON, and with the game ID, update the state
+    return data["type"]["state"]

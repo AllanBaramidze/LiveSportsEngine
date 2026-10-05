@@ -42,7 +42,7 @@ async def query_pre() -> None:
             session, now=today, lead=timedelta(minutes=1), max_overdue=timedelta(hours=1))
         async with EspnClient() as espn:
             for game in games:
-                data = await espn.get_match_status(game.sport, game.league, game.espn_id)
+                #TODO data = await espn.get_match_status(game.sport, game.league, game.espn_id)
 
 
 

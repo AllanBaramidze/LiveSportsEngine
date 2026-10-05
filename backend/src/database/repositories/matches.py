@@ -40,7 +40,7 @@ async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) ->
     await session.execute(stmt)
     return len(games)
 
-async def update_matches(session: AsyncSession, espn_id: str, games: Sequence[MatchCreate]) -> int:
+ # TODO async def update_matches(session: AsyncSession, espn_id: str, games: Sequence[MatchCreate]) -> int:
 
 # --- reads 
 
