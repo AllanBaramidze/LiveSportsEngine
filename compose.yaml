@@ -1,0 +1,15 @@
+services:
+  db: 
+    image: postgres:18
+    container_name: db_dev
+    env_file:
+      - ".env.local"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: unless-stopped
+    
+  
+volumes:
+  postgres_data:

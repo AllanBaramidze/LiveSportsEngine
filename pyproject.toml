@@ -6,6 +6,7 @@ dependencies = [
     "alembic>=1.20.0",
     "asyncpg>=0.31.0",
     "httpx>=0.28.1",
+    "ipykernel>=7.4.0",
     "mypy>=2.3.1",
     "psycopg[binary]>=3.3.6",
     "pydantic>=2.13.5",
@@ -15,8 +16,30 @@ dependencies = [
     "websockets>=17.1",
 ]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Install this project into the venv in editable mode: `uv sync` adds backend/ to
+# Python's import path, so `import src...` works from any directory.
+[tool.hatch.build.targets.wheel]
+packages = ["backend/src"]
+
+[tool.hatch.build]
+dev-mode-dirs = ["backend"]
+
 [dependency-groups]
 dev = [
     "mypy>=2.3.1",
     "ruff>=0.16.9",
 ]
+
+[tool.ruff]
+# backend/ is the import root (we run from there), so `src.*` counts as first-party code.
+src = ["backend"]
+
+[tool.mypy]
+# Same import root as ruff; the pydantic plugin knows BaseSettings fields come from env vars.
+mypy_path = "backend"
+explicit_package_bases = true
+plugins = ["pydantic.mypy"]
