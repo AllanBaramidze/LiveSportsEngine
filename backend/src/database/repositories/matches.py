@@ -8,7 +8,7 @@ into one all-or-nothing commit.
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,7 +40,11 @@ async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) ->
     await session.execute(stmt)
     return len(games)
 
- # TODO async def update_matches(session: AsyncSession, espn_id: str, games: Sequence[MatchCreate]) -> int:
+async def update_status(session: AsyncSession, espn_id: str, status: str) -> None:
+
+    stmt = update(Match).where(Match.espn_id == espn_id).values(status=status)
+    await session.execute(stmt)
+
 
 # --- reads 
 

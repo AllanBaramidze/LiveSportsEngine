@@ -9,8 +9,9 @@ from collections.abc import Sequence
 from datetime import date, timedelta
 
 from src.client.espn.espn_client import EspnClient
-from src.client.espn.parser import parse_scoreboard
+from src.client.espn.parser import parse_scoreboard, parse_state
 from src.database.database import SessionLocal
+from src.database.models import Match
 from src.database.repositories import matches
 from src.schemas.match import MatchCreate
 
@@ -53,3 +54,22 @@ async def ingest_days(days: Sequence[date], leagues=None) -> dict[str, int | Bas
     }
 
 
+async def refresh_statuses(games: Sequence[Match]) -> dict[str, str | BaseException]:
+    """Ask ESPN for each game's current state and save any that changed"""
+    async with EspnClient() as espn:
+        responses = await asyncio.gather(
+            *(espn.get_match_status(g.sport, g.league, g.espn_id) for g in games),
+            return_exceptions=True,
+        )
+    changes: dict[str, str | BaseException] = {}
+    async with SessionLocal() as session:
+        for game, response in zip(games, responses, strict=True):
+            if isinstance(response, BaseException):
+                changes[game.espn_id] = response
+                continue
+            state = parse_state(response)
+            if state != game.status:
+                await matches.update_status(session, game.espn_id, state)
+                changes[game.espn_id] = state
+        await session.commit()
+    return changes

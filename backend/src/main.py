@@ -3,16 +3,16 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
+from typing import Awaitable, Callable
 from zoneinfo import ZoneInfo
 
-from src.client.espn.espn_client import EspnClient
+from src.database.database import SessionLocal, engine
 from src.database.repositories import matches
-from src.database.database import engine, SessionLocal
-from src.services.espn_ingest import date_range, ingest_days
+from src.services.espn_ingest import date_range, ingest_days, refresh_statuses
 
 POLL_ONCE_DAY = 86400
 POLL_SECONDS_INGAME = 30
-POLL_DAILY = 1800
+POLL_PREGAME = 1800
 # ESPN's `dates=` follows the US Eastern calendar, so "today" must too,
 # whatever timezone this machine (or a future server) is in.
 ESPN_TZ = ZoneInfo("America/New_York")
@@ -35,27 +35,39 @@ async def run_once_daily() -> None:
 
 
 async def query_pre() -> None:
-
-    today = datetime.now(ESPN_TZ)
+    log.info("Querying pre games")
+    now = datetime.now(ESPN_TZ)
     async with SessionLocal() as session:
         games = await matches.list_due_pregame(
-            session, now=today, lead=timedelta(minutes=1), max_overdue=timedelta(hours=1))
-        async with EspnClient() as espn:
-            for game in games:
-                #TODO data = await espn.get_match_status(game.sport, game.league, game.espn_id)
+            session, now=now, lead=timedelta(minutes=1), max_overdue=timedelta(hours=1))
+    if not games:
+        log.info("No games found")
+        return
+
+    changes = await refresh_statuses(games)
+    for espn_id, result in changes.items():
+        if isinstance(result, BaseException):
+            log.error("[%s] status check failed: %r", espn_id, result)
+        else:
+            log.info("[%s] stats -> %s", espn_id, result)
 
 
+
+async def every(seconds: int, name: str, job: Callable[[], Awaitable[None]]) -> None:
+    while True:
+        try:
+            await job()
+        except Exception:
+            log.exception("Exception occurred")
+        await asyncio.sleep(seconds)
 
 
 async def main() -> None:
-    log.info("Polling schedule every: %ds", POLL_ONCE_DAY)
+    log.info("Daily schedule every: %ds, pre-game check every %ds", POLL_ONCE_DAY, POLL_PREGAME)
     try:
-        while True:
-            try:
-                await run_once_daily()
-            except Exception:
-                log.exception("Exception occurred")
-            await asyncio.sleep(POLL_ONCE_DAY)
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(every(POLL_ONCE_DAY, "daily schedule", run_once_daily))
+            tg.create_task(every(POLL_PREGAME, "daily schedule", query_pre))
     finally:
         await engine.dispose()
 

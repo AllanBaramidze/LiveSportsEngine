@@ -46,8 +46,10 @@ Time handling (decided 2026-10-04): timestamps stored as `timestamptz` (exact in
 - `uv run python -m src.main`
 Deployment: unknown.
 
+In-game storage (PROPOSED by learner 2026-10-06, not confirmed, not implemented): poller → Redis (latest values, for the pricing engine's low-latency reads) → Postgres only when a value moved (durable history for backtesting / model training / crash recovery). Each entry has `espn_time` + `polymarket_time` for freshness.
+
 ## Unknowns
-- Storage model for win-probability / price history over a game.
+- Storage model for win-probability / price history over a game (proposal above; open: who writes Postgres, what counts as movement, fetch time vs source event time).
 - How a match is linked to its Polymarket market.
 - Pricing engine inputs, outputs and how it reads the data.
 - Which ESPN endpoint to use for live win probability (options documented in `backend/documentation/espn_api.ipynb`; NHL has none).
