@@ -14,4 +14,5 @@ class Settings(BaseSettings):
     db_echo: bool = False
 
 
+
 settings = Settings()

@@ -11,7 +11,7 @@ def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[Matc
     games = []
     for event in data.get("events", []):
         competitors = event["competitions"][0]["competitors"]
-        # competitors[0] isn't always home, so use ESPN's homeAway field.
+        # competitors[0] isn't always home, instead using ESPN's homeAway field.
         teams = {c["homeAway"]: c["team"]["displayName"] for c in competitors}
         sides = {c["homeAway"]: c for c in event["competitions"][0]["competitors"]}
         away, home = sides["away"], sides["home"]
