@@ -55,6 +55,9 @@ async def main() -> None:
         for league, first, last in result:
             print(f"  {league}: {first:%b %d} -> {last:%b %d}")
 
+        # live games
+        show("live right now", await matches.list_in_progress(session))
+
     await engine.dispose()
 
 

@@ -15,7 +15,7 @@ Stack familiarity: Beginner (async Python, SQLAlchemy/Alembic, Postgres, Docker)
 
 ## Goals
 Primary: Understand the whole system end to end while building it
-Capability goal: Not specified
+Capability goal: After the ESPN + Polymarket feeds: build a frontend and train a model on ESPN + Polymarket data (stated 2026-10-07); wants study resources; curious about open-weight LLMs (mentioned "Mistral Large 4 / LeChonk", unverified by Claude)
 
 ## Preferences
 Checkpoint frequency: Normal

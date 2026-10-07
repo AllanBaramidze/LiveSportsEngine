@@ -48,6 +48,10 @@ Deployment: unknown.
 
 In-game storage (PROPOSED by learner 2026-10-06, not confirmed, not implemented): poller → Redis (latest values, for the pricing engine's low-latency reads) → Postgres only when a value moved (durable history for backtesting / model training / crash recovery). Each entry has `espn_time` + `polymarket_time` for freshness.
 
+`espn_observations.py` (CONFIRMED design 2026-10-07, not yet implemented): id PK; espn_id FK→matches.espn_id; wall_clock + ingest_time (timestamptz); espn_home_prob / espn_tie_prob (nullable) / espn_away_prob (NUMERIC); period (int); clock (nullable text); play_id; unique (espn_id, play_id, home, tie, away) NULLS NOT DISTINCT + ON CONFLICT DO NOTHING; index (espn_id, wall_clock). Sport detail tables (e.g. MLB pitcher / batter / count / inning side) reference the observation row. Leagues: NFL, NBA, MLB (NHL dropped). Source: ESPN core probabilities, latest reading every 5 s for `in` games.
+
+Roadmap (learner, 2026-10-07): finish ESPN feed → Polymarket feed → frontend + model training on ESPN + Polymarket data. Model type not chosen.
+
 ## Unknowns
 - Storage model for win-probability / price history over a game (proposal above; open: who writes Postgres, what counts as movement, fetch time vs source event time).
 - How a match is linked to its Polymarket market.

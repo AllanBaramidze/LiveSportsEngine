@@ -45,6 +45,11 @@ async def update_status(session: AsyncSession, espn_id: str, status: str) -> Non
     stmt = update(Match).where(Match.espn_id == espn_id).values(status=status)
     await session.execute(stmt)
 
+async def update_score(session: AsyncSession, espn_id: str, home_score: int, away_score: int) -> None:
+
+    stmt = update(Match).where(Match.espn_id == espn_id).values(home_score=str(home_score), away_score=str(away_score))
+    await session.execute(stmt)
+
 
 # --- reads 
 
@@ -86,6 +91,15 @@ async def list_due_pregame(session: AsyncSession, *,
     return result.all()
 
 
+async def list_in_progress(session: AsyncSession):
+    """Games that are in progress: "in" """
+    stmt = (
+        select(Match)
+        .where(Match.status == "in")
+        .order_by(Match.date)
+    )
+    result = await session.scalars(stmt)
+    return result.all()
 
 async def search_by_team(
     session: AsyncSession, team: str, limit: int = 20

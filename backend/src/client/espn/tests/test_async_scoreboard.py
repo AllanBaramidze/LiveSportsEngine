@@ -1,5 +1,6 @@
 import asyncio
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
+
 import httpx
 
 BASE_URL = "https://site.api.espn.com/apis/site/v2/sports"

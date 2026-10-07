@@ -2,17 +2,22 @@
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-from typing import Awaitable, Callable
 from zoneinfo import ZoneInfo
 
 from src.database.database import SessionLocal, engine
 from src.database.repositories import matches
-from src.services.espn_ingest import date_range, ingest_days, refresh_statuses
+from src.services.espn_ingest import (
+    date_range,
+    ingest_days,
+    poll_in_game,
+    refresh_statuses,
+)
 
 POLL_ONCE_DAY = 86400
-POLL_SECONDS_INGAME = 30
-POLL_PREGAME = 1800
+POLL_SECONDS_INGAME = 10
+POLL_PREGAME = 60
 # ESPN's `dates=` follows the US Eastern calendar, so "today" must too,
 # whatever timezone this machine (or a future server) is in.
 ESPN_TZ = ZoneInfo("America/New_York")
@@ -52,6 +57,28 @@ async def query_pre() -> None:
             log.info("[%s] stats -> %s", espn_id, result)
 
 
+async def query_ingame() -> None:
+    """Poll every live game, get its latest win probability, and save it to espn_observations table"""
+    log.info("Querying ingame games")
+    async with SessionLocal() as session:
+        games = await matches.list_in_progress(session)
+    if not games:
+        log.info("No games found")
+        return
+
+    results = await poll_in_game(games)
+
+    for espn_id, result in results.items():
+        if isinstance(result, BaseException):
+            log.error("[%s] in-game poll failed: %r", espn_id, result)
+            continue
+        if result["observation_id"] is not None:
+            log.info("[%s] new reading saved (id %s)", espn_id, result["observation_id"])
+        if result["state"] == "post":
+            log.info("[%s] game over -> post", espn_id)
+
+
+
 
 async def every(seconds: int, name: str, job: Callable[[], Awaitable[None]]) -> None:
     while True:
@@ -67,7 +94,8 @@ async def main() -> None:
     try:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(every(POLL_ONCE_DAY, "daily schedule", run_once_daily))
-            tg.create_task(every(POLL_PREGAME, "daily schedule", query_pre))
+            tg.create_task(every(POLL_PREGAME, "pregame check", query_pre))
+            tg.create_task(every(POLL_SECONDS_INGAME, "ingame check", query_ingame))
     finally:
         await engine.dispose()
 

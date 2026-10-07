@@ -34,3 +34,32 @@ class EspnClient:
         response = await self._http.get(f"{CORE_URL}/{sport}/leagues/{league}/events/{espn_id}/competitions/{espn_id}/status")
         response.raise_for_status()
         return response.json()
+
+    async def get_game_info(self, sport: str, league: str, espn_id: str) -> dict[str, Any]:
+        status = await self.get_match_status(sport, league, espn_id)
+        response_one = await self._http.get(f"{CORE_URL}/{sport}/leagues/{league}/events/{espn_id}/competitions/{espn_id}/probabilities?limit=1")
+        response_one.raise_for_status()
+        count = response_one.json()["count"]
+
+        if count == 0:
+            return {"status": status, "count": 0, "reading": None ,"play": None}
+
+        response_two = await self._http.get(f"{CORE_URL}/{sport}/leagues/{league}/events/{espn_id}/competitions/{espn_id}/probabilities?limit=1&page={count}")
+        response_two.raise_for_status()
+        reading_ref = response_two.json()["items"][0]["$ref"]
+
+        response_three = await self._http.get(reading_ref)
+        response_three.raise_for_status()
+        reading = response_three.json()
+
+        response_four = await self._http.get(reading["play"]["$ref"])
+        response_four.raise_for_status()
+        play = response_four.json()
+
+        return {"status": status, "count": count, "reading": reading ,"play": play}
+
+
+
+
+
+
