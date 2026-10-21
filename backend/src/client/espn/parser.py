@@ -40,25 +40,34 @@ def parse_state(data: dict[str, Any]) -> str:
     return data["type"]["state"]
 
 
-def parse_observations(data: dict[str, Any], espn_id: str, ingest_time: datetime) -> EspnObservationCreate:
-    """Take ESPN observations and get them ready to be written to the espn_observations table"""
-    reading = data["reading"]
-    play = data["play"]
+def parse_observations(data: dict[str, Any], espn_id: str, ingest_time: datetime) -> list[EspnObservationCreate]:
+    """Pair each reading with its play and build the rows for espn_observations (oldest → newest)."""
+    plays_by_id = {play["id"]: play for play in data["plays"]}  # lookup table, built once
 
-    clock_info = play.get("clock")
-    clock = clock_info["displayValue"] if clock_info else None
+    observations = []
+    for reading in data["readings"]:  # one reading at a time (oldest → newest)
+        play_id = reading["play"]["$ref"].split("/plays/")[1].split("?")[0]
+        play = plays_by_id.get(play_id)
+        if play is None:  # its play isn't in this poll yet
+            continue  # skip it; the next poll retries
 
-    return EspnObservationCreate(
-        espn_id=espn_id,
-        play_id=play["id"],
-        wall_clock=play["wallclock"],
-        period=play["period"]["number"],
-        clock=clock,
-        espn_home_prob=reading["homeWinPercentage"],
-        espn_tie_prob=reading.get("tiePercentage"),
-        espn_away_prob=reading["awayWinPercentage"],
-        ingest_time=ingest_time,
-        espn_reading_count=data["count"],
-        home_score=play["homeScore"],
-        away_score=play["awayScore"],
-    )
+        clock_info = play.get("clock")
+        clock = clock_info["displayValue"] if clock_info else None
+
+        observations.append(
+            EspnObservationCreate(
+                espn_id=espn_id,
+                play_id=play["id"],
+                wall_clock=play["wallclock"],
+                period=play["period"]["number"],
+                clock=clock,
+                espn_home_prob=reading["homeWinPercentage"],
+                espn_tie_prob=reading.get("tiePercentage"),
+                espn_away_prob=reading["awayWinPercentage"],
+                ingest_time=ingest_time,
+                espn_reading_count=data["count"],
+                home_score=play["homeScore"],
+                away_score=play["awayScore"],
+            )
+        )
+    return observations

@@ -9,7 +9,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     restart: unless-stopped
-    
+
+  valkey:
+    image: valkey/valkey:9.0-alpine3.24
+    container_name: valkey_db_dev
+    env_file:
+      - ".env.local"
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    restart: unless-stopped
+
   
 volumes:
+  valkey_data:
   postgres_data:

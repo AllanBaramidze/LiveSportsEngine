@@ -20,7 +20,7 @@ Capability goal: After the ESPN + Polymarket feeds: build a frontend and train a
 ## Preferences
 Checkpoint frequency: Normal
 Question style: Open-ended
-Implementation style: More hands-on: learner types the code; Claude provides documentation references and example snippets to read and adapt
+Implementation style: learner types the code; since 2026-10-21 repeatedly asks Claude to show the full tested implementation with line-by-line explanation (and doc links) before typing it
 Pacing: one function / one concept at a time with deep, line-by-line explanation; multi-part lessons covering several new pieces at once left the learner lost (2026-10-04)
 
 ## Strong Concepts

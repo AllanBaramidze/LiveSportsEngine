@@ -8,6 +8,7 @@ Real-time comparison of ESPN win probabilities against Polymarket prices during 
 - Record game scores (learner in progress: `home_score` on `Match`).
 - Record, over the course of a game: ESPN home/away win probability and Polymarket home/away price, for charting and for the pricing engine (requested; design not chosen).
 - Documentation folder at `backend/documentation/` (requested).
+- Frontend (requested 2026-10-07, planning only): main page with current games + good pricing; research "blog" on sportsbook / Polymarket pricing; lifetime stats (sport, team, game) + AI analysis. Audience: public research/portfolio piece. Home page must be as fresh as the DB (no added frontend delay). Stack and data contract not chosen.
 
 ## Components
 Implemented (verified):

@@ -3,11 +3,15 @@
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from functools import partial
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from glide import GlideClient
+
 from src.database.database import SessionLocal, engine
 from src.database.repositories import matches
+from src.database.valkey import create_valkey
 from src.services.espn_ingest import (
     date_range,
     ingest_days,
@@ -57,8 +61,8 @@ async def query_pre() -> None:
             log.info("[%s] stats -> %s", espn_id, result)
 
 
-async def query_ingame() -> None:
-    """Poll every live game, get its latest win probability, and save it to espn_observations table"""
+async def query_ingame(valkey: GlideClient) -> None:
+    """Poll every live game, save its new/edited win-probability readings to espn_observations."""
     log.info("Querying ingame games")
     async with SessionLocal() as session:
         games = await matches.list_in_progress(session)
@@ -66,17 +70,15 @@ async def query_ingame() -> None:
         log.info("No games found")
         return
 
-    results = await poll_in_game(games)
+    results = await poll_in_game(games, valkey)
 
     for espn_id, result in results.items():
         if isinstance(result, BaseException):
             log.error("[%s] in-game poll failed: %r", espn_id, result)
             continue
-        if result["observation_id"] is not None:
-            log.info("[%s] new reading saved (id %s)", espn_id, result["observation_id"])
+        log.info("[%s] %d new rows, count %d", espn_id, result["new_rows"], result["count"])
         if result["state"] == "post":
             log.info("[%s] game over -> post", espn_id)
-
 
 
 
@@ -91,14 +93,15 @@ async def every(seconds: int, name: str, job: Callable[[], Awaitable[None]]) -> 
 
 async def main() -> None:
     log.info("Daily schedule every: %ds, pre-game check every %ds", POLL_ONCE_DAY, POLL_PREGAME)
+    valkey = await create_valkey()
     try:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(every(POLL_ONCE_DAY, "daily schedule", run_once_daily))
             tg.create_task(every(POLL_PREGAME, "pregame check", query_pre))
-            tg.create_task(every(POLL_SECONDS_INGAME, "ingame check", query_ingame))
+            tg.create_task(every(POLL_SECONDS_INGAME, "ingame check", partial(query_ingame, valkey)))
     finally:
+        await valkey.close()
         await engine.dispose()
-
 
 if __name__ == "__main__":
     logging.basicConfig(

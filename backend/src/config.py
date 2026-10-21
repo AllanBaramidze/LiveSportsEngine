@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     database_url: str
     db_echo: bool = False
 
+    valkey_host: str = "localhost"
+    valkey_port: int = 6379
+
 
 
 settings = Settings()
