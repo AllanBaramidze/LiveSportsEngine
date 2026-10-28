@@ -1,9 +1,17 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import Any
 
+from src.client.polymarket.polymarket_utils import get_match_abbr
 from src.schemas.espn_observation import EspnObservationCreate
 from src.schemas.match import MatchCreate
 
+EASTERN = ZoneInfo("America/New_York")
+
+def eastern_date(espn_date: str) -> str:
+    utc = datetime.fromisoformat(espn_date) # "2026-10-22T02:00Z" → 2026-10-22 02:00+00:00
+    eastern = utc.astimezone(EASTERN) # → 2026-10-21 22:00-04:00
+    return eastern.date().isoformat() # → "2026-10-21"
 
 def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[MatchCreate]:
     """Turn a raw ESPN scoreboard payload into MatchCreate objects.
@@ -17,6 +25,7 @@ def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[Matc
         teams = {c["homeAway"]: c["team"]["displayName"] for c in competitors}
         sides = {c["homeAway"]: c for c in event["competitions"][0]["competitors"]}
         away, home = sides["away"], sides["home"]
+        poly_slug = get_match_abbr(teams["home"], teams["away"], league, eastern_date(event["date"]))
         games.append(
             MatchCreate(
                 espn_id=event["id"],
@@ -29,6 +38,7 @@ def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[Matc
                 away_team=teams["away"],
                 away_score=away["score"],
                 date=event["date"],  # pydantic parses ESPN's ISO string into a datetime
+                poly_slug=poly_slug,
             )
         )
     return games

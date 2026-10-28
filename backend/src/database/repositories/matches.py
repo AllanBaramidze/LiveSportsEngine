@@ -35,6 +35,7 @@ async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) ->
             "away_team": stmt.excluded.away_team,
             "away_score": stmt.excluded.away_score,
             "date": stmt.excluded.date,
+            "poly_slug": stmt.excluded.poly_slug,
         },
     )
     await session.execute(stmt)

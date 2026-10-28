@@ -20,3 +20,4 @@ class MatchCreate(BaseModel):
     away_team: str
     away_score: str
     date: datetime
+    poly_slug: str
