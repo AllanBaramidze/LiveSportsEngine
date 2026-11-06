@@ -19,6 +19,8 @@ from src.database.models import Match
 from src.database.repositories import espn_observations, matches
 from src.schemas.match import MatchCreate
 
+# (sport, league) pairs the app tracks. ESPN's sport name is needed in every URL, so it is
+# kept next to the league code. NHL is excluded: ESPN has no NHL win probability.
 LEAGUES = [("football", "nfl"), ("baseball", "mlb"), ("basketball", "nba")]
 
 
@@ -28,6 +30,7 @@ def date_range(start: date, end: date) -> list[date]:
 
 async def fetch_league(espn: EspnClient, sport: str, league: str, days: Sequence[date]
                        ) -> list[MatchCreate]:
+    """Fetch and parse one league's scoreboards for several days (all days requested at once)."""
     payloads = await asyncio.gather(
         *(espn.get_scoreboard(sport, league, day) for day in days)
     )
@@ -35,6 +38,11 @@ async def fetch_league(espn: EspnClient, sport: str, league: str, days: Sequence
 
 
 async def ingest_league(espn: EspnClient, sport: str, league: str, days: Sequence[date]) -> int:
+    """Fetch one league's schedule for `days` and upsert it in its own transaction.
+
+    Returns:
+        Number of games upserted.
+    """
     games = await fetch_league(espn, sport, league, days)
     # Each concurrent task opens its own session: an AsyncSession must never be
     # shared between tasks running at the same time.
@@ -45,7 +53,15 @@ async def ingest_league(espn: EspnClient, sport: str, league: str, days: Sequenc
 
 
 async def ingest_days(days: Sequence[date], leagues=None) -> dict[str, int | BaseException]:
-    """Ingest every league concurrently. One league failing doesn't stop the others."""
+    """Ingest the schedule of every league concurrently. One league failing doesn't stop the others.
+
+    Args:
+        days: Eastern calendar days to fetch.
+        leagues: `(sport, league)` pairs; defaults to `LEAGUES`.
+
+    Returns:
+        `{league: games_upserted}`, or the exception for a league that failed.
+    """
     if leagues is None:
         leagues = LEAGUES
     async with EspnClient() as espn:
@@ -59,7 +75,18 @@ async def ingest_days(days: Sequence[date], leagues=None) -> dict[str, int | Bas
 
 
 async def refresh_statuses(games: Sequence[Match]) -> dict[str, str | BaseException]:
-    """Ask ESPN for each game's current state and save any that changed"""
+    """Ask ESPN for each game's current state and save the ones that changed, in one commit.
+
+    Used for the `pre` to `in` hand-off: a game saved as `in` is no longer selected by the
+    pre-game check and is picked up by the in-game poller.
+
+    Args:
+        games: Games to check (all requested at once).
+
+    Returns:
+        `{espn_id: new_state}` for games whose state changed, or the exception for a game whose
+        request failed. Unchanged games are not included.
+    """
     async with EspnClient() as espn:
         responses = await asyncio.gather(
             *(espn.get_match_status(g.sport, g.league, g.espn_id) for g in games),
@@ -79,14 +106,43 @@ async def refresh_statuses(games: Sequence[Match]) -> dict[str, str | BaseExcept
     return changes
 
 async def fetch_game(espn: EspnClient, valkey: GlideClient, game: Match) -> tuple[dict[str, Any], datetime]:
-    """Get one game's newest readings and plays, and the moment they arrived."""
+    """Get one game's newest readings and plays, and the moment they arrived.
+
+    The arrival time is taken per game as its own data returns, not once for the whole poll,
+    because `asyncio.gather` only returns when the slowest game has finished.
+
+    Returns:
+        `(game_info, ingest_time)`, where `game_info` is `EspnClient.get_game_info`'s result
+        and `ingest_time` is the current UTC time.
+    """
     count = await valkey_store.get_reading_count(valkey, game.espn_id)
     data = await espn.get_game_info(game.sport, game.league, game.espn_id, count)
     return data, datetime.now(UTC)
 
 
 async def poll_in_game(games: Sequence[Match], valkey: GlideClient) -> dict[str, dict[str, Any] | BaseException]:
-    """Fetch each live game's newest readings and status; save new/edited readings and finished games."""
+    """Poll every live game once: save new or edited readings, the score and the game state.
+
+    For each game that fetched successfully:
+      1. Pair readings with plays and insert each reading, oldest first. Exact repeats are
+         ignored by the database; an edited probability becomes a new row.
+      2. Update the score on `matches` from the play with the latest `wall_clock`, only if it
+         differs from what is stored. (Late-added plays carry old scores, so the last row is
+         not necessarily the latest moment.)
+      3. Update the status if it changed (for example `in` to `post`).
+    All games are committed together. Only after the commit is Valkey updated: the reading
+    count is saved for live games and deleted for finished ones.
+
+    A game that failed to fetch is reported and skipped; the others are unaffected.
+
+    Args:
+        games: Live games (`status = in`).
+        valkey: Connected Valkey client holding each game's last reading count.
+
+    Returns:
+        `{espn_id: {"new_rows": int, "count": int, "state": str}}`, or the exception for a
+        game that failed.
+    """
     async with EspnClient() as espn:
         responses = await asyncio.gather(
             *(fetch_game(espn, valkey, g) for g in games),

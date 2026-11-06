@@ -1,3 +1,12 @@
+"""Manual script (not an automated test): poll ESPN scoreboards for a date range.
+
+An early experiment, kept for reference. It talks to ESPN directly with its own small client
+and does not use the app's `EspnClient`, parser or database. It pauses `POLL_SECONDS` between days.
+
+Run from the repo root:
+    uv run python -m src.client.espn.tests.test_async_scoreboard
+"""
+
 import asyncio
 from datetime import date, timedelta
 
@@ -9,12 +18,16 @@ POLL_SECONDS = 3
 
 
 async def get_scoreboard(client: httpx.AsyncClient, sport: str, league: str, date: str) -> dict:
+    """Fetch one league's scoreboard for `date` (`YYYYMMDD`) and return the raw JSON."""
     response = await client.get(f"{BASE_URL}/{sport}/{league}/scoreboard?dates={date}&limit=500")
     response.raise_for_status()
     return response.json()
 
 def clean_data(data: dict) -> list:
+    """Reduce a scoreboard to name, status and both teams' names and scores.
 
+    Takes the home team as competitor 0, which is not reliable; the real parser uses `homeAway`.
+    """
     games = []
     for game in data.get("events", []):
         competition = game['competitions'][0]
@@ -40,6 +53,7 @@ def clean_data(data: dict) -> list:
     return games
 
 async def poll_once(client: httpx.AsyncClient, date: str) -> None:
+    """Fetch every league for one day at once and print how many games each returned."""
     results = await asyncio.gather(
         *[get_scoreboard(client, sport, league, date) for sport, league in LEAGUES],
         return_exceptions=True

@@ -1,3 +1,9 @@
+"""Pure functions that turn raw ESPN JSON into the app's own types.
+
+No network and no database here, so every function can be tested against a saved JSON file.
+The client fetches, these functions interpret, and the service decides what to store.
+"""
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -9,14 +15,32 @@ from src.schemas.match import MatchCreate
 EASTERN = ZoneInfo("America/New_York")
 
 def eastern_date(espn_date: str) -> str:
+    """Convert ESPN's UTC start time to the US Eastern calendar day (`YYYY-MM-DD`).
+
+    Polymarket slugs use the Eastern date, which can differ from the UTC date for night
+    games: `2026-10-22T02:00Z` is still 21 October in Eastern time.
+
+    Args:
+        espn_date: ISO timestamp from ESPN, e.g. `2026-10-22T02:00Z`.
+    """
     utc = datetime.fromisoformat(espn_date) # "2026-10-22T02:00Z" → 2026-10-22 02:00+00:00
     eastern = utc.astimezone(EASTERN) # → 2026-10-21 22:00-04:00
     return eastern.date().isoformat() # → "2026-10-21"
 
 def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[MatchCreate]:
-    """Turn a raw ESPN scoreboard payload into MatchCreate objects.
+    """Turn a raw ESPN scoreboard payload into `MatchCreate` objects, one per event.
 
-    Pure function (no network, no DB), so it can be tested against a saved JSON file.
+    Home and away are read from each competitor's `homeAway` field, because the order of
+    `competitors` is not reliable. `sport` and `league` are not in ESPN's JSON in a usable
+    form, so the caller passes them in.
+
+    Args:
+        data: Scoreboard JSON for one league and one day.
+        league: League code, e.g. `nba`.
+        sport: ESPN sport name, e.g. `basketball`.
+
+    Returns:
+        The games in ESPN's order; empty if the day has no events.
     """
     games = []
     for event in data.get("events", []):
@@ -45,13 +69,33 @@ def parse_scoreboard(data: dict[str, Any], league: str, sport: str) -> list[Matc
 
 
 def parse_state(data: dict[str, Any]) -> str:
-    """Take ESPN state to check the update"""
-    # Pass in some JSON, and with the game ID, update the state
+    """Read a game's state from ESPN's core `/status` JSON.
+
+    Args:
+        data: Response of the core `/status` endpoint (also `status` in `get_game_info`).
+
+    Returns:
+        `"pre"` (not started), `"in"` (live) or `"post"` (finished).
+    """
     return data["type"]["state"]
 
 
 def parse_observations(data: dict[str, Any], espn_id: str, ingest_time: datetime) -> list[EspnObservationCreate]:
-    """Pair each reading with its play and build the rows for espn_observations (oldest → newest)."""
+    """Pair each reading with its play and build the rows for `espn_observations`.
+
+    ESPN keeps two lists per game, win-probability readings and plays, matched by play id.
+    The reading carries the probabilities; the play carries the time, period, clock and score.
+
+    Args:
+        data: Result of `EspnClient.get_game_info` (`readings`, `plays` and `count` are used).
+        espn_id: ESPN event id of the game.
+        ingest_time: When the data was received (UTC); set by the caller, since it is not in
+            ESPN's JSON.
+
+    Returns:
+        One observation per reading, in the order given (oldest to newest). A reading whose
+        play is missing from `data` is skipped; it is picked up again on a later poll.
+    """
     plays_by_id = {play["id"]: play for play in data["plays"]}  # lookup table, built once
 
     observations = []

@@ -1,4 +1,15 @@
-"""The main entry point for running the app."""
+"""Entry point: runs the ESPN polling loops until stopped.
+
+Start it from the repo root with `uv run python -m src.main` (Postgres and Valkey must be up).
+Three independent loops run side by side. They share no variables; they hand work over through
+the `status` column of `matches` (`pre` -> `in` -> `post`):
+
+* daily schedule: add the next 7 days of games as `pre`;
+* pre-game check: flip games that have started from `pre` to `in`;
+* in-game poll: save win-probability readings for `in` games and flip finished ones to `post`.
+
+This module decides *when* things run. What each step does lives in `services/espn_ingest.py`.
+"""
 
 import asyncio
 import logging
@@ -19,9 +30,10 @@ from src.services.espn_ingest import (
     refresh_statuses,
 )
 
-POLL_ONCE_DAY = 86400
-POLL_SECONDS_INGAME = 10
-POLL_PREGAME = 60
+# Seconds to wait between runs of each loop (the wait starts after a run finishes).
+POLL_ONCE_DAY = 86400  # daily schedule: 24 h
+POLL_SECONDS_INGAME = 10  # in-game poll
+POLL_PREGAME = 60  # pre-game check
 # ESPN's `dates=` follows the US Eastern calendar, so "today" must too,
 # whatever timezone this machine (or a future server) is in.
 ESPN_TZ = ZoneInfo("America/New_York")
@@ -30,7 +42,12 @@ log = logging.getLogger(__name__)
 
 
 async def run_once_daily() -> None:
-    """this runs once a day to insert the schedule of games 8 days ahead and re-runs this window"""
+    """Upsert the schedule for today and the next 6 days (7 days, US Eastern).
+
+    The whole window is re-fetched on every run rather than only the newest day, so changed
+    start times and new `poly_slug` values reach games already stored. Failures are logged per
+    league; one league failing doesn't stop the others.
+    """
 
     today = datetime.now(ESPN_TZ).date()  # is today's date
     week = date_range(today, today + timedelta(days=6))  # marks the 7-day gap
@@ -44,6 +61,12 @@ async def run_once_daily() -> None:
 
 
 async def query_pre() -> None:
+    """Find `pre` games that are about to start (or just have) and refresh their state.
+
+    A game is due from 1 minute before its start until 1 hour after it. The database session
+    is closed before ESPN is called, so no connection is held open during the network requests.
+    A game ESPN reports as `in` is saved as `in`, which hands it to the in-game poll.
+    """
     log.info("Querying pre games")
     now = datetime.now(ESPN_TZ)
     async with SessionLocal() as session:
@@ -62,7 +85,11 @@ async def query_pre() -> None:
 
 
 async def query_ingame(valkey: GlideClient) -> None:
-    """Poll every live game, save its new/edited win-probability readings to espn_observations."""
+    """Poll every live game and save its new or edited win-probability readings.
+
+    Args:
+        valkey: Connected Valkey client; holds each game's last reading count.
+    """
     log.info("Querying ingame games")
     async with SessionLocal() as session:
         games = await matches.list_in_progress(session)
@@ -83,6 +110,17 @@ async def query_ingame(valkey: GlideClient) -> None:
 
 
 async def every(seconds: int, name: str, job: Callable[[], Awaitable[None]]) -> None:
+    """Run `job` forever: run it, wait `seconds`, repeat.
+
+    The first run happens immediately. An exception inside `job` is logged and the loop carries
+    on, so one bad run never kills the poller. Because the wait begins after the job finishes,
+    the real period is `seconds` plus the job's own running time.
+
+    Args:
+        seconds: Wait between the end of one run and the start of the next.
+        name: Label for the loop (currently unused in log messages).
+        job: Zero-argument coroutine function; use `functools.partial` to bind arguments.
+    """
     while True:
         try:
             await job()
@@ -92,6 +130,11 @@ async def every(seconds: int, name: str, job: Callable[[], Awaitable[None]]) -> 
 
 
 async def main() -> None:
+    """Connect to Valkey, run the three loops together, and clean up on exit.
+
+    The loops run inside an `asyncio.TaskGroup`: if one raises an unhandled error the others
+    are cancelled too. The Valkey client and the database engine are always closed afterwards.
+    """
     log.info("Daily schedule every: %ds, pre-game check every %ds", POLL_ONCE_DAY, POLL_PREGAME)
     valkey = await create_valkey()
     try:

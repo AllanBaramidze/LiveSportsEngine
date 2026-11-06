@@ -1,16 +1,28 @@
+"""Manual script (not an automated test): print one day's NFL scoreboard in a reduced form.
+
+The earliest experiment, using blocking `httpx.get` and no app code. Kept for reference.
+
+Run from the repo root:
+    uv run python -m src.client.espn.tests.test_scoreboard
+"""
+
 import json
 
 import httpx
 
 
 def get_scoreboard(sport, league, date) -> dict:
+    """Fetch one league's scoreboard for `date` (`YYYYMMDD`) and return the raw JSON."""
     URL = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard?dates={date}&limit=500"
     response = httpx.get(URL)
     data = response.json()
     return data
 
 def clean_data(data: dict):
+    """Reduce a scoreboard to name, status and both teams' names and scores.
 
+    Takes the home team as competitor 0, which is not reliable; the real parser uses `homeAway`.
+    """
     games = []
     for game in data.get("events", []):
         competition = game['competitions'][0]

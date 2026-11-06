@@ -1,3 +1,12 @@
+"""Manual script (not an automated test): try `list_due_pregame` against a pretend clock.
+
+Pretends it is 4:26 pm Eastern on 2026-10-04 (lead 10 min, max overdue 3 h) and prints the
+`pre` games that would be due. The result depends on what is in your `matches` table.
+
+Run from the repo root (Postgres must be up):
+    uv run python -m src.database.tests.test_due_games
+"""
+
 import asyncio
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo

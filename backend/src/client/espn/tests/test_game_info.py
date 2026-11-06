@@ -1,3 +1,12 @@
+"""Manual script (not an automated test): fetch and parse one finished game's readings.
+
+Calls `EspnClient.get_game_info` for NFL game 401872952 with no saved count, prints the start of
+the raw result, then the parsed state and observations. Needs network access only, no database.
+
+Run from the repo root:
+    uv run python -m src.client.espn.tests.test_game_info
+"""
+
 import asyncio
 import json
 from datetime import UTC, datetime

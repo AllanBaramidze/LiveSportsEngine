@@ -25,9 +25,9 @@ def get_match_abbr(home_team: str, away_team: str, league: str, date: str) -> st
     teams = get_team_names(league)
 
 
-    def lookup(full_name: str) -> str | None:
+    def lookup(team_name: str) -> str | None:
         for team in teams:
-            if full_name == team["name"] or full_name.endswith(" " + team["name"]):
+            if team_name == team["name"] or team_name.endswith(" " + team["name"]):
                 return team["abbreviation"]
         return None
 

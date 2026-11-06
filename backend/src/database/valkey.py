@@ -10,6 +10,7 @@ from src.config import settings
 
 
 def reading_count_key(espn_id: str) -> str:
+    """Valkey key holding one game's ESPN reading count, e.g. `espn:reading_count:401872952`."""
     return f"espn:reading_count:{espn_id}"
 
 
@@ -26,8 +27,10 @@ async def get_reading_count(client: GlideClient, espn_id: str) -> int | None:
 
 
 async def set_reading_count(client: GlideClient, espn_id: str, count: int) -> None:
+    """Save a game's reading count. Valkey stores strings, so the int is converted."""
     await client.set(reading_count_key(espn_id), str(count))
 
 
 async def delete_reading_count(client: GlideClient, espn_id: str) -> None:
+    """Forget a game's reading count (used once the game is finished). Missing keys are fine."""
     await client.delete([reading_count_key(espn_id)])

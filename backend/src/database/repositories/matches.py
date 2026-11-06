@@ -19,14 +19,25 @@ from src.schemas.match import MatchCreate
 
 
 async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) -> int:
-    """Insert games, or update them if espn_id already exists. Safe to re-run."""
+    """Insert games, or update them if their `espn_id` already exists. Safe to re-run.
+
+    On a conflict every field except `espn_id` is overwritten with the incoming value,
+    including `poly_slug`, so each ingest refreshes start times, scores and the slug.
+
+    Args:
+        session: Open session; the caller commits.
+        games: Games to store.
+
+    Returns:
+        How many games were sent (inserted or updated), not only the new ones.
+    """
     if not games:
         return 0
 
     stmt = insert(Match).values([game.model_dump() for game in games])
     stmt = stmt.on_conflict_do_update(
         index_elements=[Match.espn_id],
-        # poly_slug is left out on purpose so re-ingesting never wipes it.
+        # Columns refreshed when the game already exists (everything but the key).
         set_={
             "matchup": stmt.excluded.matchup,
             "status": stmt.excluded.status,
@@ -42,12 +53,12 @@ async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) ->
     return len(games)
 
 async def update_status(session: AsyncSession, espn_id: str, status: str) -> None:
-
+    """Set one game's status (`pre`, `in` or `post`). The caller commits."""
     stmt = update(Match).where(Match.espn_id == espn_id).values(status=status)
     await session.execute(stmt)
 
 async def update_score(session: AsyncSession, espn_id: str, home_score: int, away_score: int) -> None:
-
+    """Set one game's score. Scores are stored as text, so the ints are converted. The caller commits."""
     stmt = update(Match).where(Match.espn_id == espn_id).values(home_score=str(home_score), away_score=str(away_score))
     await session.execute(stmt)
 
@@ -56,6 +67,7 @@ async def update_score(session: AsyncSession, espn_id: str, home_score: int, awa
 
 
 async def get_by_espn_id(session: AsyncSession, espn_id: str) -> Match | None:
+    """Return the game with this ESPN id, or `None` if it isn't stored."""
     return await session.scalar(select(Match).where(Match.espn_id == espn_id))
 
 
@@ -65,7 +77,15 @@ async def list_matches(session: AsyncSession,*,
     end: datetime | None = None,
     limit: int = 50,
 ) -> Sequence[Match]:
-    """Games ordered by start time, optionally filtered. `start` is inclusive, `end` exclusive."""
+    """Games ordered by start time, optionally filtered.
+
+    Args:
+        session: Open session.
+        league: Only this league (e.g. `nba`); all leagues if `None`.
+        start: Earliest start time, inclusive.
+        end: Latest start time, exclusive.
+        limit: Maximum number of games returned.
+    """
     stmt = select(Match).order_by(Match.date).limit(limit)
     if league is not None:
         stmt = stmt.where(Match.league == league)
@@ -80,7 +100,18 @@ async def list_due_pregame(session: AsyncSession, *,
                            now: datetime,
                            lead: timedelta,
                            max_overdue: timedelta) -> Sequence[Match]:
-    """Games still marked 'pre' that start within 'lead' of 'now'"""
+    """Games still marked `pre` that are due for a status check, earliest first.
+
+    A game is due when it starts at or before `now + lead` (about to start, or already started)
+    and no earlier than `now - max_overdue` (so a game ESPN never flips is eventually dropped).
+    This is a filter only: how often it runs is decided in `main.py`.
+
+    Args:
+        session: Open session.
+        now: The current time (timezone-aware).
+        lead: How long before the start a game counts as due.
+        max_overdue: How long after the scheduled start a `pre` game keeps being checked.
+    """
     stmt = (
         select(Match)
         .where(Match.status == "pre")
@@ -93,7 +124,7 @@ async def list_due_pregame(session: AsyncSession, *,
 
 
 async def list_in_progress(session: AsyncSession):
-    """Games that are in progress: "in" """
+    """Live games (`status = in`), earliest start first. These are the games the in-game poller covers."""
     stmt = (
         select(Match)
         .where(Match.status == "in")
@@ -118,6 +149,7 @@ async def search_by_team(
 
 
 async def count_by_league(session: AsyncSession) -> dict[str, int]:
+    """Number of stored games per league, e.g. `{"nba": 120, "nfl": 45}`."""
     stmt = (
         select(Match.league, func.count()).group_by(Match.league).order_by(Match.league)
     )
