@@ -20,7 +20,9 @@ class MatchCreate(BaseModel):
         away_team: Away team display name.
         away_score: Away score as text, exactly as ESPN sends it.
         date: Scheduled start; pydantic parses ESPN's ISO string into an aware datetime.
-        poly_slug: Polymarket event slug, `{league}-{away}-{home}-{YYYY-MM-DD}` (Eastern date).
+
+    There is deliberately no `poly_slug` here: ESPN doesn't know it. `services/polymarket_link.py`
+    fills that column.
     """
 
     espn_id: str
@@ -33,4 +35,3 @@ class MatchCreate(BaseModel):
     away_team: str
     away_score: str
     date: datetime
-    poly_slug: str

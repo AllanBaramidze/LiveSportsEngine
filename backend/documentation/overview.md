@@ -1,6 +1,6 @@
 # Live Sports Engine: Overview
 
-_Last updated: 2026-10-07_
+_Last updated: 2026-11-21 (Game → Polymarket link only; other rows date from 2026-10-07)_
 
 ## Purpose
 
@@ -20,12 +20,13 @@ threshold.
 | In-game ESPN win probability | Working: `espn_observations` table, polled every 10 s for `in` games |
 | Game end (`in` → `post`) | Working: the in-game poll reads each game's status and moves it to `post` |
 | Valkey (latest values) | Planned (after the Postgres path); layout not designed |
+| Game → Polymarket link | Working: looked up every 10 min ([how it works](game_polymarket_link.md)) |
 | Polymarket prices | Not started |
 | Pricing engine (`src/engine/`) | Not started (empty package) |
 
 ## How data flows today
 
-`main.py` runs three loops side by side (`every(...)` helper + `asyncio.TaskGroup`):
+`main.py` runs four loops side by side (`every(...)` helper + `asyncio.TaskGroup`):
 
 ```
 daily schedule (every 24 h)
@@ -52,6 +53,13 @@ in-game check (every 10 s)
           └─► matches.update_status           "post" takes the game out of the loop
              (all of the above committed together)
 ```
+
+Polymarket link (every 10 min)
+   └─► polymarket_link.link_upcoming
+          ├─► PolymarketClient.list_game_events ──HTTP──►  Polymarket Gamma /events/keyset
+          ├─► polymarket parser.parse_games
+          ├─► game_matching.match_games       same teams + start time ─► one event per game
+          └─► matches.set_poly_slug           ─► Postgres `matches.poly_slug`
 
 Planned, not built:
 
@@ -120,7 +128,7 @@ LiveSportsEngine/
 | `home_team`, `away_team` | text | display names |
 | `home_score`, `away_score` | varchar(16), default `'0'` | stored as text, as ESPN sends them |
 | `date` | timestamptz | scheduled start (UTC) |
-| `poly_slug` | text, nullable | Polymarket market slug; how it gets filled is not decided |
+| `poly_slug` | text, nullable | Polymarket event slug; written only by `services/polymarket_link.py` |
 
 Migrations: `create matches table`, `add status`, `add scores`, `add sport`.
 
@@ -209,9 +217,8 @@ These are undecided. They belong to the project owner and are listed here so the
 1. Valkey layout for the latest values, and how the pricing engine reads it.
 2. How Polymarket prices are fetched and stored (`polymarket_observations`), and how they are
    lined up with `espn_observations` by time.
-3. How a match is linked to its Polymarket market (`poly_slug` exists; source unknown).
-4. NHL: another provider later, or not at all.
-5. MLB (and other) sport detail tables: exact columns.
+3. NHL: another provider later, or not at all.
+4. MLB (and other) sport detail tables: exact columns.
 
 Decided and moved out of this list: ESPN win-probability storage (`espn_observations`), one
 table per source, time alignment (`wall_clock` + `ingest_time`), NHL dropped for now, game end

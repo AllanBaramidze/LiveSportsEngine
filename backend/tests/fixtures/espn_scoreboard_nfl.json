@@ -1,0 +1,54 @@
+{
+ "events": [
+  {
+   "id": "401873077",
+   "uid": "s:20~l:28~e:401873077",
+   "date": "2026-11-23T01:20Z",
+   "name": "Minnesota Vikings at San Francisco 49ers",
+   "shortName": "MIN VS SF",
+   "status": {
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sun, November 22nd at 8:20 PM EST",
+     "shortDetail": "11/22 - 8:20 PM EST"
+    }
+   },
+   "competitions": [
+    {
+     "id": "401873077",
+     "date": "2026-11-23T01:20Z",
+     "competitors": [
+      {
+       "id": "25",
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "25",
+        "displayName": "San Francisco 49ers",
+        "name": "49ers",
+        "location": "San Francisco",
+        "abbreviation": "SF"
+       }
+      },
+      {
+       "id": "16",
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "16",
+        "displayName": "Minnesota Vikings",
+        "name": "Vikings",
+        "location": "Minnesota",
+        "abbreviation": "MIN"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

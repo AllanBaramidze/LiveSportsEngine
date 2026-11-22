@@ -5,7 +5,7 @@ decides where a transaction starts and ends, so several calls can be grouped
 into one all-or-nothing commit.
 """
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta
 
 from sqlalchemy import func, or_, select, update
@@ -21,20 +21,23 @@ from src.schemas.match import MatchCreate
 async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) -> int:
     """Insert games, or update them if their `espn_id` already exists. Safe to re-run.
 
-    On a conflict every field except `espn_id` is overwritten with the incoming value,
-    including `poly_slug`, so each ingest refreshes start times, scores and the slug.
+    On a conflict every field except `espn_id` is overwritten with the incoming value, so each
+    ingest refreshes start times and scores. `poly_slug` is not an incoming field and is left
+    alone. If ESPN listed a game on two days, the later listing wins.
 
     Args:
         session: Open session; the caller commits.
         games: Games to store.
 
     Returns:
-        How many games were sent (inserted or updated), not only the new ones.
+        How many distinct games were sent (inserted or updated), not only the new ones.
     """
     if not games:
         return 0
 
-    stmt = insert(Match).values([game.model_dump() for game in games])
+    # Postgres rejects an upsert that touches the same row twice in one statement.
+    unique = {game.espn_id: game for game in games}
+    stmt = insert(Match).values([game.model_dump() for game in unique.values()])
     stmt = stmt.on_conflict_do_update(
         index_elements=[Match.espn_id],
         # Columns refreshed when the game already exists (everything but the key).
@@ -46,11 +49,10 @@ async def upsert_matches(session: AsyncSession, games: Sequence[MatchCreate]) ->
             "away_team": stmt.excluded.away_team,
             "away_score": stmt.excluded.away_score,
             "date": stmt.excluded.date,
-            "poly_slug": stmt.excluded.poly_slug,
         },
     )
     await session.execute(stmt)
-    return len(games)
+    return len(unique)
 
 async def update_status(session: AsyncSession, espn_id: str, status: str) -> None:
     """Set one game's status (`pre`, `in` or `post`). The caller commits."""
@@ -60,6 +62,11 @@ async def update_status(session: AsyncSession, espn_id: str, status: str) -> Non
 async def update_score(session: AsyncSession, espn_id: str, home_score: int, away_score: int) -> None:
     """Set one game's score. Scores are stored as text, so the ints are converted. The caller commits."""
     stmt = update(Match).where(Match.espn_id == espn_id).values(home_score=str(home_score), away_score=str(away_score))
+    await session.execute(stmt)
+
+async def set_poly_slug(session: AsyncSession, espn_id: str, slug: str | None) -> None:
+    """Set or clear (`None`) one game's Polymarket slug. The caller commits."""
+    stmt = update(Match).where(Match.espn_id == espn_id).values(poly_slug=slug)
     await session.execute(stmt)
 
 
@@ -95,6 +102,25 @@ async def list_matches(session: AsyncSession,*,
         stmt = stmt.where(Match.date < end)
     result = await session.scalars(stmt)
     return result.all()
+
+async def list_between(session: AsyncSession, league: str, start: datetime, end: datetime) -> Sequence[Match]:
+    """Every game of one league starting in `[start, end)`. No limit, unlike `list_matches`."""
+    stmt = (
+        select(Match)
+        .where(Match.league == league)
+        .where(Match.date >= start)
+        .where(Match.date < end)
+        .order_by(Match.date)
+    )
+    result = await session.scalars(stmt)
+    return result.all()
+
+
+async def list_by_slugs(session: AsyncSession, slugs: Iterable[str]) -> Sequence[Match]:
+    """Games that currently hold any of these Polymarket slugs, whatever their date."""
+    result = await session.scalars(select(Match).where(Match.poly_slug.in_(list(slugs))))
+    return result.all()
+
 
 async def list_due_pregame(session: AsyncSession, *,
                            now: datetime,

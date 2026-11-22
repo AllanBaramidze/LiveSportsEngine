@@ -39,6 +39,7 @@ class Match(Base):
         away_score: Latest away score, stored as text.
         date: Scheduled start time (UTC instant).
         poly_slug: Polymarket event slug used to find this game's market; `None` if unknown.
+            Copied from Polymarket by `services/polymarket_link.py`, never built from parts.
     """
 
     __tablename__ = "matches"

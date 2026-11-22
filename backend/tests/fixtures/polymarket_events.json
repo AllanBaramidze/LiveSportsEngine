@@ -1,0 +1,477 @@
+{
+ "nfl-min-sf-2026-11-23": {
+  "id": "1301063",
+  "slug": "nfl-min-sf-2026-11-23",
+  "title": "Vikings vs. 49ers",
+  "startTime": "2026-11-23T01:20:00Z",
+  "eventDate": "2026-11-22",
+  "gameId": 19604,
+  "closed": false,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100033,
+    "name": "Minnesota Vikings",
+    "league": "nfl",
+    "abbreviation": "min",
+    "alias": "Vikings",
+    "ordering": "away"
+   },
+   {
+    "id": 100027,
+    "name": "San Francisco 49ers",
+    "league": "nfl",
+    "abbreviation": "sf",
+    "alias": "49ers",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-min-sf-2026-11-23-player-props": {
+  "id": "1413445",
+  "slug": "nfl-min-sf-2026-11-23-player-props",
+  "title": "Vikings vs. 49ers - Player Props",
+  "startTime": "2026-11-23T01:20:00Z",
+  "parentEventId": 1301063,
+  "closed": false,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100033,
+    "name": "Minnesota Vikings",
+    "league": "nfl",
+    "abbreviation": "min",
+    "alias": "Vikings",
+    "ordering": "away"
+   },
+   {
+    "id": 100027,
+    "name": "San Francisco 49ers",
+    "league": "nfl",
+    "abbreviation": "sf",
+    "alias": "49ers",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-min-sf-2026-11-23-first-td-scorer": {
+  "id": "1421084",
+  "slug": "nfl-min-sf-2026-11-23-first-td-scorer",
+  "title": "Vikings vs. 49ers - First Touchdown Scorer",
+  "startTime": "2026-11-23T01:20:00Z",
+  "eventDate": "2026-11-22",
+  "parentEventId": 1301063,
+  "gameId": 19604,
+  "closed": false,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100033,
+    "name": "Minnesota Vikings",
+    "league": "nfl",
+    "abbreviation": "min",
+    "alias": "Vikings",
+    "ordering": "away"
+   },
+   {
+    "id": 100027,
+    "name": "San Francisco 49ers",
+    "league": "nfl",
+    "abbreviation": "sf",
+    "alias": "49ers",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-mia-buf-2026-11-22": {
+  "id": "1301064",
+  "slug": "nfl-mia-buf-2026-11-22",
+  "title": "Dolphins vs. Bills",
+  "startTime": "2026-11-22T18:00:00Z",
+  "eventDate": "2026-11-22",
+  "gameId": 19606,
+  "closed": false,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100028,
+    "name": "Miami Dolphins",
+    "league": "nfl",
+    "abbreviation": "mia",
+    "alias": "Dolphins",
+    "ordering": "away"
+   },
+   {
+    "id": 100041,
+    "name": "Buffalo Bills",
+    "league": "nfl",
+    "abbreviation": "buf",
+    "alias": "Bills",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-dal-sea-2026-08-16": {
+  "id": "800931",
+  "slug": "nfl-dal-sea-2026-08-16",
+  "title": "Cowboys vs. Seahawks",
+  "startTime": "2026-08-16T00:00:00Z",
+  "eventDate": "2026-08-15",
+  "gameId": 19775,
+  "closed": true,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100049,
+    "name": "Dallas Cowboys",
+    "league": "nfl",
+    "abbreviation": "dal",
+    "alias": "Cowboys",
+    "ordering": "away"
+   },
+   {
+    "id": 100046,
+    "name": "Seattle Seahawks",
+    "league": "nfl",
+    "abbreviation": "sea",
+    "alias": "Seahawks",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-sea-dal-2026-08-16": {
+  "id": "684079",
+  "slug": "nfl-sea-dal-2026-08-16",
+  "title": "Seahawks vs. Cowboys",
+  "startTime": "2026-08-16T00:00:00Z",
+  "eventDate": "2026-08-15",
+  "gameId": 19752,
+  "closed": true,
+  "seriesSlug": "nfl-2026",
+  "teams": [
+   {
+    "id": 100046,
+    "name": "Seattle Seahawks",
+    "league": "nfl",
+    "abbreviation": "sea",
+    "alias": "Seahawks",
+    "ordering": "away"
+   },
+   {
+    "id": 100049,
+    "name": "Dallas Cowboys",
+    "league": "nfl",
+    "abbreviation": "dal",
+    "alias": "Cowboys",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nfl-phi-lac-2025-12-08": {
+  "id": "90035",
+  "slug": "nfl-phi-lac-2025-12-08",
+  "title": "Eagles vs. Chargers",
+  "startTime": "2025-12-08T20:15:00Z",
+  "eventDate": "2025-12-08",
+  "gameId": 19251,
+  "closed": true,
+  "seriesSlug": "nfl-2025",
+  "teams": [
+   {
+    "id": 100043,
+    "name": "Philadelphia Eagles",
+    "league": "nfl",
+    "abbreviation": "phi",
+    "alias": "Eagles",
+    "ordering": "away"
+   },
+   {
+    "id": 100047,
+    "name": "Los Angeles Chargers",
+    "league": "nfl",
+    "abbreviation": "lac",
+    "alias": "Chargers",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nba-den-mem-2026-01-25": {
+  "id": "174562",
+  "slug": "nba-den-mem-2026-01-25",
+  "title": "Nuggets vs. Grizzlies",
+  "startTime": "2026-03-18T20:30:00Z",
+  "eventDate": "2026-03-18",
+  "gameId": 20023703,
+  "closed": true,
+  "seriesSlug": "nba-2026",
+  "teams": [
+   {
+    "id": 100496,
+    "name": "Nuggets",
+    "league": "nba",
+    "abbreviation": "den",
+    "alias": "Nuggets",
+    "ordering": "away"
+   },
+   {
+    "id": 100492,
+    "name": "Grizzlies",
+    "league": "nba",
+    "abbreviation": "mem",
+    "alias": "Grizzlies",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nba-ind-mem-2025-10-25": {
+  "id": "62561",
+  "slug": "nba-ind-mem-2025-10-25",
+  "title": "Pacers vs. Grizzlies",
+  "startTime": "2025-10-26T00:00:00Z",
+  "eventDate": "2025-10-25",
+  "gameId": 20022568,
+  "closed": true,
+  "seriesSlug": "nba-2026",
+  "teams": [
+   {
+    "id": 100498,
+    "name": "Pacers",
+    "league": "nba",
+    "abbreviation": "ind",
+    "alias": "Pacers",
+    "ordering": "away"
+   },
+   {
+    "id": 100492,
+    "name": "Grizzlies",
+    "league": "nba",
+    "abbreviation": "mem",
+    "alias": "Grizzlies",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nba-ind-mem-2025-10-26": {
+  "id": "65144",
+  "slug": "nba-ind-mem-2025-10-26",
+  "title": "Pacers vs. Grizzlies",
+  "startTime": "2025-10-26T00:00:00Z",
+  "eventDate": "2025-10-25",
+  "gameId": 22568,
+  "closed": true,
+  "teams": [
+   {
+    "id": 100498,
+    "name": "Pacers",
+    "league": "nba",
+    "abbreviation": "ind",
+    "alias": "Pacers",
+    "ordering": "away"
+   },
+   {
+    "id": 100492,
+    "name": "Grizzlies",
+    "league": "nba",
+    "abbreviation": "mem",
+    "alias": "Grizzlies",
+    "ordering": "home"
+   }
+  ]
+ },
+ "nba-por-nyk-2026-11-21": {
+  "id": "1330303",
+  "slug": "nba-por-nyk-2026-11-21",
+  "title": "Trail Blazers vs. Knicks",
+  "startTime": "2026-11-22T00:30:00Z",
+  "eventDate": "2026-11-21",
+  "gameId": 20024152,
+  "closed": true,
+  "seriesSlug": "nba-2026",
+  "teams": [
+   {
+    "id": 100505,
+    "name": "Trail Blazers",
+    "league": "nba",
+    "abbreviation": "por",
+    "alias": "Trail Blazers",
+    "ordering": "away"
+   },
+   {
+    "id": 100494,
+    "name": "Knicks",
+    "league": "nba",
+    "abbreviation": "nyk",
+    "alias": "Knicks",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-chc-cle-2026-04-05": {
+  "id": "325336",
+  "slug": "mlb-chc-cle-2026-04-05",
+  "title": "Chicago Cubs vs. Cleveland Guardians",
+  "startTime": "2026-04-05T17:40:00Z",
+  "eventDate": "2026-04-05",
+  "gameId": 10077409,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114212,
+    "name": "Chicago Cubs",
+    "league": "mlb",
+    "abbreviation": "chc",
+    "alias": "Cubs",
+    "ordering": "away"
+   },
+   {
+    "id": 114227,
+    "name": "Cleveland Guardians",
+    "league": "mlb",
+    "abbreviation": "cle",
+    "alias": "Guardians",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-chc-cle-2026-04-05-dh2": {
+  "id": "346757",
+  "slug": "mlb-chc-cle-2026-04-05-dh2",
+  "title": "Chicago Cubs vs. Cleveland Guardians",
+  "startTime": "2026-04-05T20:40:00Z",
+  "eventDate": "2026-04-05",
+  "gameId": 10079719,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114212,
+    "name": "Chicago Cubs",
+    "league": "mlb",
+    "abbreviation": "chc",
+    "alias": "Cubs",
+    "ordering": "away"
+   },
+   {
+    "id": 114227,
+    "name": "Cleveland Guardians",
+    "league": "mlb",
+    "abbreviation": "cle",
+    "alias": "Guardians",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-tb-bos-2026-05-09": {
+  "id": "447859",
+  "slug": "mlb-tb-bos-2026-05-09",
+  "title": "Tampa Bay Rays vs. Boston Red Sox",
+  "startTime": "2026-07-17T17:35:00Z",
+  "eventDate": "2026-07-17",
+  "gameId": 10077865,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114228,
+    "name": "Tampa Bay Rays",
+    "league": "mlb",
+    "abbreviation": "tb",
+    "alias": "Rays",
+    "ordering": "away"
+   },
+   {
+    "id": 114204,
+    "name": "Boston Red Sox",
+    "league": "mlb",
+    "abbreviation": "bos",
+    "alias": "Red Sox",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-tb-bos-2026-07-17": {
+  "id": "691531",
+  "slug": "mlb-tb-bos-2026-07-17",
+  "title": "Tampa Bay Rays vs. Boston Red Sox",
+  "startTime": "2026-07-17T23:10:00Z",
+  "eventDate": "2026-07-17",
+  "gameId": 10078741,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114228,
+    "name": "Tampa Bay Rays",
+    "league": "mlb",
+    "abbreviation": "tb",
+    "alias": "Rays",
+    "ordering": "away"
+   },
+   {
+    "id": 114204,
+    "name": "Boston Red Sox",
+    "league": "mlb",
+    "abbreviation": "bos",
+    "alias": "Red Sox",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-cin-sf-2026-03-13": {
+  "id": "259620",
+  "slug": "mlb-cin-sf-2026-03-13",
+  "title": "Cincinnati Reds vs. San Francisco Giants",
+  "startTime": "2026-03-13T23:05:00Z",
+  "eventDate": "2026-03-13",
+  "gameId": 10077127,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114219,
+    "name": "Cincinnati Reds",
+    "league": "mlb",
+    "abbreviation": "cin",
+    "alias": "Reds",
+    "ordering": "away"
+   },
+   {
+    "id": 114205,
+    "name": "San Francisco Giants",
+    "league": "mlb",
+    "abbreviation": "sf",
+    "alias": "Giants",
+    "ordering": "home"
+   }
+  ]
+ },
+ "mlb-sf-cin-2026-03-13": {
+  "id": "259621",
+  "slug": "mlb-sf-cin-2026-03-13",
+  "title": "San Francisco Giants vs. Cincinnati Reds",
+  "startTime": "2026-03-14T01:05:00Z",
+  "eventDate": "2026-03-13",
+  "gameId": 10077119,
+  "closed": true,
+  "seriesSlug": "mlb",
+  "teams": [
+   {
+    "id": 114205,
+    "name": "San Francisco Giants",
+    "league": "mlb",
+    "abbreviation": "sf",
+    "alias": "Giants",
+    "ordering": "away"
+   },
+   {
+    "id": 114219,
+    "name": "Cincinnati Reds",
+    "league": "mlb",
+    "abbreviation": "cin",
+    "alias": "Reds",
+    "ordering": "home"
+   }
+  ]
+ }
+}

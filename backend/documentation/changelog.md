@@ -5,6 +5,24 @@ All notable changes to this project. Format based on
 
 ## [Unreleased]
 
+### 2026-11-21
+
+#### Added
+- Game → Polymarket link by lookup (teams + start time): `PolymarketClient.list_game_events`,
+  `polymarket/parser.parse_games`, `services/game_matching`, `services/polymarket_link`, a fourth
+  loop in `main.py`, and a repair command. See `game_polymarket_link.md`.
+- Automated tests in `backend/tests` (stdlib `unittest`).
+
+#### Fixed
+- `poly_slug` was built from team + date, which is wrong for NFL night games, rescheduled games
+  and doubleheaders.
+- The ESPN parser made one blocking HTTP call to Polymarket per game.
+- The schedule refresh overwrote `poly_slug`.
+- A game listed on two days made that league's whole upsert fail.
+
+#### Removed
+- `client/polymarket/polymarket_utils.py` and its stale test script. `requests` is now unused.
+
 ### 2026-10-07 (evening)
 
 #### Added
